@@ -37,10 +37,37 @@ class PerceptionParserTest extends TestCase
             $this->assertNotEmpty($detail->getNumDoc());
             $this->assertNotNull($detail->getFechaEmision());
             $this->assertGreaterThan(0, count($detail->getCobros()));
+            foreach ($detail->getCobros() as $cobro) {
+                $this->assertGreaterThan(0, $cobro->getNumero());
+                $this->assertNotNull($cobro->getFecha());
+            }
             $this->assertTrue(is_float($detail->getImpTotal()));
             $this->assertTrue(is_float($detail->getImpPercibido()));
             $this->assertTrue(is_float($detail->getImpCobrar()));
         }
+    }
+
+    /**
+     * Field 7 of SUNAT's "Percepciones1_0" sheet, and conditional: absent
+     * from a document that is not exceptionally issued.
+     */
+    public function testParseIndExcepcional()
+    {
+        $withIndicator = $this->parseResource('20000000001-40-P001-2.xml');
+        $this->assertSame('01', $withIndicator->getIndExcepcional());
+
+        $without = $this->parseResource('20000000001-40-P001-1.xml');
+        $this->assertNull($without->getIndExcepcional());
+    }
+
+    private function parseResource(string $filename): Perception
+    {
+        $path = __DIR__.'/../../Resources/perception/'.$filename;
+
+        /**@var $obj Perception */
+        $obj = $this->getParser()->parse(file_get_contents($path));
+
+        return $obj;
     }
 
     public function providerDocs()

@@ -57,6 +57,7 @@ class PerceptionParser implements DocumentParserInterface
         $perception->setSerie($idNum[0])
             ->setCorrelativo($idNum[1])
             ->setFechaEmision(new DateTime($xml->getValue('cbc:IssueDate')))
+            ->setIndExcepcional($xml->getValue('sac:ExceptionalIndicator', $root, null))
             ->setCompany($this->getCompany())
             ->setProveedor($this->getClient())
             ->setRegimen($xml->getValue('sac:SUNATPerceptionSystemCode'))
@@ -171,10 +172,12 @@ class PerceptionParser implements DocumentParserInterface
         $pays = $xml->getNodes('cac:Payment', $node);
         foreach ($pays as $pay) {
             $temp = $xml->getNode('cbc:PaidAmount', $pay);
+            $numero = $xml->getValue('cbc:ID', $pay);
             $payment = new Payment();
-            $payment->setMoneda($temp->getAttribute('currencyID'))
+            $payment->setNumero($numero === null || $numero === '' ? null : (int)$numero)
+                ->setMoneda($temp->getAttribute('currencyID'))
                 ->setImporte((float)$temp->nodeValue)
-                ->setFecha(new DateTime($xml->getValue('cbc:PaidDate')));
+                ->setFecha(new DateTime($xml->getValue('cbc:PaidDate', $pay)));
 
             yield $payment;
         }
